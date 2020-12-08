@@ -1,12 +1,11 @@
 `timescale 1ns / 1ps
-`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
 // 
 // Create Date: 12/06/2020 11:36:48 AM
 // Design Name: 
-// Module Name: user_input
+// Module Name: t_asciitobinary
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 

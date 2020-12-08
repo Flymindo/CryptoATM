@@ -21,7 +21,7 @@
 
 
 // PROGRAM TO SEND READY SIGNAL FOR EVERYTHING
-// used after asciitobinary.v
+// asciitobinary.v calls are embedded
 
 
 module user_input(
