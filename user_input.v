@@ -30,12 +30,16 @@ module user_input(
     input  [3:0] input_style_out,
     input [15:0] cstate,
     output reg [3:0] status_code_out,
-    output reg [31:0] pswd,
-    output reg [31:0] acct,
+    output reg [15:0] pswd,
+    output reg [15:0] acct,
     output reg [1:0] usr_input_out,
     output reg [2:0] currency_type_out
     );
-    reg[3:0] a; // asciitobinary conversion temporary reg
+    reg[3:0] a;
+    reg[3:0] a1; // asciitobinary conversion temporary reg
+    reg[7:0] a2;
+    reg [11:0] a3;
+    reg [15:0] a4;
 
     parameter [2:0]
         USD = 3'b000,
@@ -88,59 +92,87 @@ module user_input(
         ACC_NUMBER: begin
         if (ascii_code !== 8'h2A) begin
             //Concatenation code for ACC_NUMBER  
-            if(count == 0 && status_code_out !== INPUT_COMPLETE) begin
-                acct <= 0;
+            if(count == 3'b000 && status_code_out !== INPUT_COMPLETE) begin
+                //a <= 4'b0000;
+                acct <= 16'b000000000000000;
                 count <= count+1'b1;
                 asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out); 
-                acct <= a[3:0]; // 0 is the pin's LSB
+                a1 <= a[3:0]; // 0 is the pin's LSB
             end
-            else if(count > 0 && count < 4) begin
+            else if(count == 3'b001) begin
+                //a <= 8'b00000000;
                 count <= count+1'b1;
                 asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out);
-                acct  = {a[3:0],acct};
+                a2 <= {a[3:0],a1};
             end
-            else if(count >= 4) begin                 
+            else if(count == 3'b010) begin
+                //a3 <= 12'b000000000000;
+                count <= count+1'b1;
+                asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out);
+                a3 <= {a[3:0],a2};
+            end
+            else if(count == 3'b011) begin
+                //a4 <= 16'b0000000000000000;
+                count <= count+1'b1;
+                asciitobinary(ascii_code[7:0],a4,clk, count, current_state, status_code_out);
+                a4 <= {a[3:0],a3};
+            end
+            else if(count >= 3'b100) begin    
+                acct <= 16'b000000000000000;             
                 always @(posedge clk) begin
-                    timer <= timer + 1'b1; // waits for 3 seconds       
                     // ready signal using enter key
                     if(ascii_code == 8'h0D)         // Enter button pressed
                         begin
                             status_code_out = INPUT_COMPLETE;
+                            acct <= a4;
                         end
+                    timer <= timer + 1'b1; // waits for 3 seconds       
                 end
-                count <= 0;
+                count <= 3'b000;
             end  
         end
         end
         
         PIN_NUMBER: begin
         if (ascii_code !== 8'h2A) begin // if code is non-default
-            if(count == 0 && status_code_out !== INPUT_COMPLETE) begin // digit1
-                pswd <= 0;
+            if(count == 3'b000 && status_code_out !== INPUT_COMPLETE) begin // digit1
+                //a1 <= 4'b0000;
+                pswd <= 16'b000000000000000;
                 count <= count+1'b1;
                 asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out);
-                pswd <= a[3:0]; // fill the LSB of output   
+                a1 <= a[3:0]; // fill the LSB of output   
             end
-            else if(count > 0 && count < 4) begin
+            else if(count == 3'b001) begin
+                //a2 <= 8'b00000000;
                 count <= count + 1'b1;
                 asciitobinary(ascii_code[7:0],a,clk,count, current_state, status_code_out);
-                pswd  = {a[3:0], pswd};
+                a2 <= {a[3:0], a1};
             end
-            else if(count >= 4) begin
+            else if(count == 3'b010) begin
+                //a3 <= 12'b000000000000;
+                count <= count + 1'b1;
+                asciitobinary(ascii_code[7:0],a,clk,count, current_state, status_code_out);
+                a3 <= {a[3:0], a2};
+            end
+            else if(count == 3'b011) begin
+                //a3 <= 12'b000000000000;
+                count <= count + 1'b1;
+                asciitobinary(ascii_code[7:0],a,clk,count, current_state, status_code_out);
+                a4 <= {a[3:0], a3};
+            end
+            else if(count >= 3'b100) begin
+                pswd <= 16'b0000000000000000;
                 always @(posedge clk) begin
-                    timer <= timer + 1'b1; // waits for 3 seconds       
                     // ready signal using enter key
                     if(ascii_code == 8'h0D)         // Enter button pressed
                         begin
                             status_code_out = INPUT_COMPLETE;
+                            pswd <= a4;
                         end
+                    timer <= timer + 1'b1; // waits for 3 seconds       
                 end
-                count <= 0;
+                count <= 3'b000;
             end
-            if(ascii_code == 8'h0D)         // Enter button pressed
-                begin
-                    status_code_out = INPUT_COMPLETE;
-                end
         end
         end
         
