@@ -130,8 +130,8 @@ module display(
             end
             ERROR:
             begin
-                AN = AN_mov;
-               led = led_mov;
+                AN = AN_const;
+               led = led_const;
             end
             SUCCESS:
             begin
