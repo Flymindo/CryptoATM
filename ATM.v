@@ -24,11 +24,19 @@ module ATM(
     input clk,
     input [11:0] accNumber,
     input [3:0] pin,
-    input [3:0] current_state,
+    input [15:0] current_state,
     input [1:0] menuOption,
+    input [2:0] currency_type_in,
+    input [2:0] currency_type_2_in,
     input [10:0] amount,
     input ready,
-    output reg [10:0] balance,
+    input [11:0] destinationAcc,
+    //output reg [10:0] balance,
+    output [15:0] balance_dollars_out,
+    output [15:0] balance_btc_out,
+    output [15:0] balance_eth_out,
+    output [15:0] balance_xrp_out,
+    output [15:0] balance_ltc_out,
     output [3:0] status_code
     );
     
@@ -131,6 +139,44 @@ module ATM(
     
     end
     
+    reg [15:0] conversion_database [0:4][0:4];
+    initial begin
+    //USD
+    conversion_database[0][0] = 1;
+    conversion_database[0][1] = 0.00053;
+    conversion_database[0][2] = 0.001753;
+    conversion_database[0][3] = 1.74;
+    conversion_database[0][4] = 0.012766;
+    
+    //BTC
+    conversion_database[1][0] = 18785;
+    conversion_database[1][1] = 1;
+    conversion_database[1][2] = 33;
+    conversion_database[1][3] = 32805;
+    conversion_database[1][4] = 240;
+    
+    //ETH
+    conversion_database[2][0] = 570;
+    conversion_database[2][1] = 0.03;
+    conversion_database[2][2] = 1;
+    conversion_database[2][3] = 991;
+    conversion_database[2][4] = 7.29;
+    
+    //XRP
+    conversion_database[3][0] = 0.575738;
+    conversion_database[3][1] = 0.000031;
+    conversion_database[3][2] = 0.001004;
+    conversion_database[3][3] = 1;
+    conversion_database[3][4] = 0.007316;
+    
+    //LTC
+    conversion_database[4][0] = 78.26;
+    conversion_database[4][1] = 0.004160;
+    conversion_database[4][2] = 0.137396;
+    conversion_database[4][3] = 136.75;
+    conversion_database[4][4] = 1;
+    end
+    
     wire [3:0] accIndex;
     wire [3:0] accIndexFind;
     wire [3:0] destinationAccIndex;
@@ -140,14 +186,15 @@ module ATM(
     
     reg deAuth = 1'b0;
     
-    reg balance_dollars;
-    reg balance_btc;
-    reg balance_eth;
-    reg balance_xrp;
-    reg balance_ltc;
+    reg [15:0] balance_dollars;
+    reg [15:0] balance_btc;
+    reg [15:0] balance_eth;
+    reg [15:0] balance_xrp;
+    reg [15:0] balance_ltc;
     
-    reg currency_type = 2'b00;
-    reg status_code_reg;
+    reg [1:0] currency_type = 2'b00;
+    reg [1:0] currency_type_second = 2'b00;
+    reg [3:0] status_code_reg;
     
     authenticator authAccNumberModule(accNumber, pin, AUTHENTICATE, deAuth, isAuthenticated, accIndex);
     authenticator accFinder(accNumber, 0, FIND, deAuth, accFound, accIndexFind);
@@ -156,6 +203,11 @@ module ATM(
     always @(posedge clk) begin
     
     case (current_state)
+        
+        IDLE: begin
+            deAuth = 1'b1;
+            #20;
+        end
         
         ACC_NUM: begin
             if ((ready == 1'b1) & accFound)
@@ -180,15 +232,55 @@ module ATM(
             balance_ltc = balance_database[accIndex][4];
         end
         
-        CONVERT_CURRENCY: begin
+        SELECT_CURRENCY_CONVERT_1: begin
+            if ((ready == 1'b1) & (amount <= balance_database[accIndex][currency_type_in]))
+                status_code_reg = AMT_VALID;
+            else if ((ready == 1'b1) & (amount > balance_database[accIndex][currency_type_in]))
+                status_code_reg = AMT_INVALID;
+        end
+        
+        SELECT_CURRENCY_CONVERT_2: begin
+        //
+            if ((currency_type_in != currency_type_2_in) & (ready == 1'b1)) begin
+                balance_database[accIndex][currency_type_in] = balance_database[accIndex][currency_type_in] - amount;
+                balance_database[accIndex][currency_type_2_in] = balance_database[accIndex][currency_type_2_in] + (amount * conversion_database[currency_type_in][currency_type_2_in]);
+                
+            
+            /*
+                if (currency_type_second == USD) begin
+                    balance_database[accIndex][currency_type] = balance_database[accIndex][currency_type] - amount;
+                    balance_database[accIndex][currency_type_second] = balance_database[accIndex][currency_type_second] + (amount * conversion_database[currency_type][currency_type_second]); 
+                end
+                else if (currency_type_second == BTC) begin
+                    balance_database[accIndex][currency_type] = balance_database[accIndex][currency_type] - amount;
+                    balance_database[accIndex][currency_type_second] = balance_database[accIndex][currency_type_second] + (amount * conversion_database[currency_type][currency_type_second]); 
+                end
+                else if (currency_type_second == ETH) begin
+                    balance_database[accIndex][currency_type] = balance_database[accIndex][currency_type] - amount;
+                    balance_database[accIndex][currency_type_second] = balance_database[accIndex][currency_type_second] + (amount * conversion_database[currency_type][currency_type_second]); 
+                end
+                else if (currency_type_second == XRP) begin
+                    balance_database[accIndex][currency_type] = balance_database[accIndex][currency_type] - amount;
+                    balance_database[accIndex][currency_type_second] = balance_database[accIndex][currency_type_second] + (amount * conversion_database[currency_type][currency_type_second]); 
+                end
+                else if (currency_type_second == LTC) begin
+                    balance_database[accIndex][currency_type] = balance_database[accIndex][currency_type] - amount;
+                    balance_database[accIndex][currency_type_second] = balance_database[accIndex][currency_type_second] + (amount * conversion_database[currency_type][currency_type_second]); 
+                end
+                */
+            end
+            /*
+            else if ((ready == 1'b1) & (amount > balance_database[accIndex][currency_type]))
+                status_code_reg = AMT_INVALID;
+            */
         end
         
         SELECT_AMOUNT_WITHDRAW: begin
-            if ((ready == 1'b1) & (amount <= balance_database[accIndex][currency_type])) begin
-                balance_database[accIndex][currency_type] = balance_database[accIndex][currency_type] - amount;
-                balance = balance_database[accIndex][currency_type];
+            if ((ready == 1'b1) & (amount <= balance_database[accIndex][currency_type_in])) begin
+                balance_database[accIndex][currency_type] = balance_database[accIndex][currency_type_in] - amount;
+                //balance = balance_database[accIndex][currency_type];
                 status_code_reg = AMT_VALID;
-            end else if ((ready == 1'b1) & (amount > balance_database[accIndex][currency_type])) begin
+            end else if ((ready == 1'b1) & (amount > balance_database[accIndex][currency_type_in])) begin
                 status_code_reg = AMT_INVALID;
             end
         end
@@ -202,11 +294,11 @@ module ATM(
         end
         
         SELECT_AMOUNT_TRANSFER: begin
-            if ((ready == 1'b1) & (amount <= balance_database[accIndex][currency_type]) & (balance_database[accIndex][currency_type] + amount < 2048)) begin
-                balance_database[destinationAccIndex][currency_type] = balance_database[destinationAccIndex][currency_type] + amount;
-                balance_database[destinationAccIndex][currency_type] = balance_database[accIndex][currency_type] - amount;
+            if ((ready == 1'b1) & (amount <= balance_database[accIndex][currency_type_in]) & (balance_database[accIndex][currency_type_in] + amount < 2048)) begin
+                balance_database[destinationAccIndex][currency_type_in] = balance_database[destinationAccIndex][currency_type_in] + amount;
+                balance_database[accIndex][currency_type_in] = balance_database[accIndex][currency_type_in] - amount;
                 status_code_reg = AMT_VALID;
-            end else if ((ready == 1'b1) & ((amount > balance_database[accIndex][currency_type]) | (balance_database[accIndex][currency_type] + amount > 2048))) begin
+            end else if ((ready == 1'b1) & ((amount > balance_database[accIndex][currency_type_in]) | (balance_database[accIndex][currency_type_in] + amount > 2048))) begin
                 status_code_reg = AMT_INVALID;
             end
         end
@@ -218,5 +310,10 @@ module ATM(
     end
     
     assign status_code = status_code_reg;
+    assign balance_dollars_out = balance_database[accIndex][USD];
+    assign balance_btc_out = balance_database[accIndex][BTC];
+    assign balance_eth_out = balance_database[accIndex][ETH];
+    assign balance_xrp_out = balance_database[accIndex][XRP];
+    assign balance_ltc_out = balance_database[accIndex][LTC];
     
 endmodule
