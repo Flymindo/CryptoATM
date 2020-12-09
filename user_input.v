@@ -141,20 +141,20 @@ module user_input(
     case(input_style_out)
         ACC_NUMBER: begin
         //done<=0;
-          if (ascii_code != 8'h2A) begin
+          //if (ascii_code != 8'h2A) begin
             //Concatenation code for ACC_NUMBER  
             if(count == 3'b000 && status_codes != INPUT_COMPLETE) begin
                 //a <= 4'b0000;
                 //acct <= 16'b000000000000000;
                 count <= count+1'b1;
-              ascii2binary(ascii_code[7:0],a); 
+              ascii2binary(ascii_code[7:0],a[3:0]); 
               tacct[3:0] <= a[3:0]; // 0 is the pin's LSB
               //done <= 1;
             end
             else if(count == 3'b001) begin
                 //a <= 8'b00000000;
                 count <= count+1'b1;
-                ascii2binary(ascii_code[7:0],a);
+              ascii2binary(ascii_code[7:0],a);
               tacct[7:4] <= a[3:0];
               //done <= 1;
             end
@@ -193,7 +193,7 @@ module user_input(
                 count <= 3'b000;
             end  
         end
-        end
+        //end
         
         PIN_NUMBER: begin
           //done <= 0;

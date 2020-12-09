@@ -30,25 +30,29 @@ module t_user_input();
   wire[2:0] currency_type_out, currency_type_2_out;
   wire[15:0] destinationAcc;
 
-  user_input UUT(clk, ascii_code, input_style_out, current_state, ready, status_code_out, pswd, acct, usr_input_out, currency_type_out, currency_type_2_out, destinationAcc);  
+  user_input UUT(.clk(clk), .ascii_code(ascii_code[7:0]), .input_style_out(input_style_out), .current_state(current_state[15:0]), .ready(ready), .status_code_out(status_code_out), .pswd(pswd), .acct(acct), .usr_input_out(usr_input_out), .currency_type_out(currency_type_out), .currency_type_2_out(currency_type_2_out), .destinationAcc(destinationAcc)
+                );  
 	initial begin 
 		clk =0;
-        input_style_out = 4'b0010;
-      	current_state = 16'b0000000000000001;
+        input_style_out = 4'b0100;
+      	current_state = 16'b0000000000001000;
       	ascii_code <= 0;
       //ready <=0;
 		forever #30 clk = ~clk;
 	end
 	initial begin
 		#2;
-		ascii_code <= 8'h30;  
-		#2;
+		ascii_code <= 8'h63;  
+		/*
+      #2;
 		ascii_code <= 8'h32;
 		#2;
 		ascii_code <= 8'h37;
 		#2;
-		ascii_code <= 8'h40;
+		ascii_code <= 8'h38;
 		#2;
+        */
+      #2
 		ascii_code <= 8'h0D;
     // $display(acct);
 	end
