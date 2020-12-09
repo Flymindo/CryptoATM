@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 2020/12/03 21:12:10
+// Create Date: 2020/12/09 19:29:35
 // Design Name: 
-// Module Name: inst_balance
+// Module Name: inst_enter_pin_num
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,8 +20,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module inst_balance(
-    input sec_clock,
+module inst_enter_pin_num(
+     input sec_clock,
     input rst,
     output [39:0] instruction
     );
@@ -42,55 +42,71 @@ module inst_balance(
             count <= count + 1;
             if (count == 1)
             begin
-                temp = { temp[34:0], 5'b10011};
+                temp = { temp[34:0], 5'b01001};
             end
             else if (count == 2)
             begin
-                temp = { temp[34:0], 5'b01000};
+                temp = { temp[34:0], 5'b01110};
             end
             else if (count == 3)
             begin
-                temp = { temp[34:0], 5'b01111};
+                temp = { temp[34:0], 5'b10000};
             end
             else if (count == 4)
             begin
-                temp = { temp[34:0], 5'b10111};
+                temp = { temp[34:0], 5'b10101};
             end
             else if (count == 5)
             begin
-                temp = { temp[34:0], 5'b00000};
+                temp = { temp[34:0], 5'b10100};
             end
             else if (count == 6)
             begin
-                temp = { temp[34:0], 5'b00010};
+                temp = { temp[34:0], 5'b00000};
             end
             else if (count == 7)
             begin
-                temp = { temp[34:0], 5'b00001};
+                temp = { temp[34:0], 5'b10000};
             end
             else if (count == 8)
             begin
-                temp = { temp[34:0], 5'b01100};
+                temp = { temp[34:0], 5'b01001};
             end
             else if (count == 9)
             begin
-                temp = { temp[34:0], 5'b00001};
+                temp = { temp[34:0], 5'b01110};
             end
             else if (count == 10)
             begin
-                temp = { temp[34:0], 5'b01110};
+                temp = { temp[34:0], 5'b00000};
             end
             else if (count == 11)
             begin
-                temp = { temp[34:0], 5'b00011};
+                temp = { temp[34:0], 5'b01110};
             end
             else if (count == 12)
             begin
+                temp = { temp[34:0], 5'b10101};
+            end
+            else if (count == 13)
+            begin
+                temp = { temp[34:0], 5'b01101};
+            end
+            else if (count == 14)
+            begin
+                temp = { temp[34:0], 5'b00010};
+            end
+            else if (count == 15)
+            begin
                 temp = { temp[34:0], 5'b00101};
+            end
+            else if (count == 16)
+            begin
+                temp = { temp[34:0], 5'b10010};
             end
             else
             begin
-                if( count<= 18)
+                if( count<= 23)
                     temp <= { temp[34:0],5'b00000};
                 else
                     count <= 0;
@@ -99,5 +115,4 @@ module inst_balance(
     end
     
     assign instruction = temp;
-    
 endmodule
