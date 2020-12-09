@@ -22,6 +22,7 @@
 
 module seven_seg_decoder(
     input clk,
+    input [15:0] balance,
     output reg [7:0] AN,
     output reg [6:0] led
     );
@@ -61,21 +62,21 @@ module seven_seg_decoder(
     begin
             case(LED_counter)
                 3'b000: 
-                    selected_anode = 0;
+                    selected_anode = balance%10;
                 3'b001:
-                    selected_anode = 0;
+                    selected_anode = (balance/10)%10;
                 3'b010:
-                    selected_anode = 0;
+                    selected_anode = (balance/100)%10;
                 3'b011:
-                    selected_anode = 0;
+                    selected_anode = (balance/1000)%10;
                 3'b100:
-                    selected_anode = 0;
+                    selected_anode = (balance/10000)%10;
                 3'b101:
-                    selected_anode = 0;
+                    selected_anode = (balance/100000)%10;
                 3'b110:
-                    selected_anode = 0;
+                    selected_anode = (balance/1000000)%10;
                 3'b111:
-                    selected_anode = 0;                        
+                    selected_anode = (balance/10000000)%10;                        
             endcase
     end
 
@@ -93,9 +94,6 @@ module seven_seg_decoder(
         4'b0111: led = 7'b0001111;
         4'b1000: led = 7'b0000000;
         4'b1001: led = 7'b0000100;
-        4'b1010: led = 7'b0001001;
-        4'b1011: led = 7'b0001000;
-        4'b1100: led = 7'b0011000;
         default: led = 7'b0000001;
     endcase
 
