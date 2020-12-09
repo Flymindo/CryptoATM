@@ -36,7 +36,7 @@ module t_user_input();
         input_style_out = 4'b0010;
       	current_state = 16'b0000000000000001;
       	ascii_code <= 0;
-      ready <=0;
+      //ready <=0;
 		forever #30 clk = ~clk;
 	end
 	initial begin
@@ -50,7 +50,7 @@ module t_user_input();
 		ascii_code <= 8'h40;
 		#2;
 		ascii_code <= 8'h0D;
-      //$display(acct);
+    // $display(acct);
 	end
   /*
   	initial begin

@@ -29,33 +29,26 @@ module user_input(
     input  [7:0] ascii_code,
     input  [3:0] input_style_out,
     input [15:0] current_state,
-    output ready,
-    output reg [3:0] status_code_out,
-    output reg [15:0] pswd,
-    output reg [15:0] acct,
-    output reg [1:0] usr_input_out,
-    output reg [2:0] currency_type_out,
-    output reg [2:0] currency_type_2_out,
-    output reg [15:0] destinationAcc
+  output ready,
+    output [3:0] status_code_out,
+    output [15:0] pswd,
+    output [15:0] acct,
+    output [1:0] usr_input_out,
+    output [2:0] currency_type_out,
+    output [2:0] currency_type_2_out,
+    output [15:0] destinationAcc
     );
-    reg[3:0] a;
-    reg[3:0] a1; // asciitobinary conversion temporary reg
-    reg[7:0] a2;
-    reg [11:0] a3;
-    reg [15:0] a4;
-  
-  reg[3:0] a12; // asciitobinary conversion temporary reg
-  reg[7:0] a22;
-  reg [11:0] a32;
-  reg [15:0] a42;
+  reg[3:0] a=0;
+  reg [15:0] tpswd;
+  reg [15:0] tacct;
   
   reg[3:0] status_codes;
   reg[1:0] usr_inputs;
   reg[2:0] currency_type;
   reg[2:0] currency_type_2;
-  reg[15:0] desinationa;
+  reg[15:0] destinationa;
     
-  reg[1:0] ready_reg;
+  reg ready_reg;
   	//reg done=0;
 
     parameter [2:0]
@@ -154,22 +147,22 @@ module user_input(
                 //a <= 4'b0000;
                 //acct <= 16'b000000000000000;
                 count <= count+1'b1;
-                ascii2binary(ascii_code[7:0],a); 
-                a1 <= a[3:0]; // 0 is the pin's LSB
+              ascii2binary(ascii_code[7:0],a); 
+              tacct[3:0] <= a[3:0]; // 0 is the pin's LSB
               //done <= 1;
             end
             else if(count == 3'b001) begin
                 //a <= 8'b00000000;
                 count <= count+1'b1;
                 ascii2binary(ascii_code[7:0],a);
-                a2 <= {a[3:0],a1};
+              tacct[7:4] <= a[3:0];
               //done <= 1;
             end
             else if(count == 3'b010) begin
                 //a3 <= 12'b000000000000;
                 count <= count+1'b1;
                 ascii2binary(ascii_code[7:0],a);
-                a3 <= {a[3:0],a2};
+              tacct[11:8] <= a[3:0];
              // ascii_code <= 8'h2A;
               //done <= 1;
             end
@@ -177,7 +170,7 @@ module user_input(
                 //a4 <= 16'b0000000000000000;
                 count <= count+1'b1;
                 ascii2binary(ascii_code[7:0],a);
-                a4 <= {a[3:0],a3};
+              tacct[15:12] <= a[3:0];
               //ascii_code <= 8'h2A;
               //done <= 1;
             end
@@ -190,7 +183,7 @@ module user_input(
                             status_codes = INPUT_COMPLETE;
                             ready_reg = 1'b1;
                             if (current_state == TRANSFER) begin
-                                destinationa <= a4;
+                                destinationa <= tacct;
                             end 
                                 //acct <= a4;
                           //ascii_code <= 8'h2A;
@@ -210,7 +203,7 @@ module user_input(
                 //pswd <= 16'b000000000000000;
                 count <= count+1'b1;
                 ascii2binary(ascii_code[7:0],a);
-                a12 <= a[3:0]; // fill the LSB of output   
+              tpswd[3:0] <= a[3:0]; // fill the LSB of output   
               //ascii_code <= 8'h2A;
               //done <= 1;
             end
@@ -218,7 +211,7 @@ module user_input(
                 //a2 <= 8'b00000000;
                 count <= count + 1'b1;
                 ascii2binary(ascii_code[7:0],a);
-              a22 <= {a[3:0], a12};
+              tpswd[7:4] <= a[3:0];
               //ascii_code <= 8'h2A;
               //done <= 1;
             end
@@ -226,7 +219,7 @@ module user_input(
                 //a3 <= 12'b000000000000;
                 count <= count + 1'b1;
                 ascii2binary(ascii_code[7:0],a);
-              a32 <= {a[3:0], a22};
+              tpswd[11:8] <= a[3:0];
               //ascii_code <= 8'h2A;
               //done <= 1;
             end
@@ -234,7 +227,7 @@ module user_input(
                 //a3 <= 12'b000000000000;
                 count <= count + 1'b1;
                 ascii2binary(ascii_code[7:0],a);
-              a42 <= {a[3:0], a32};
+              tpswd[15:12] <= a[3:0];
               //ascii_code <= 8'h2A;
               //done <= 1;
             end
@@ -360,8 +353,8 @@ module user_input(
     end
     
     assign ready = ready_reg;
-  	assign acct = a4;
-  	assign pswd = a42;
+  	assign acct = tacct;
+  	assign pswd = tpswd;
   	assign status_code_out = status_codes;
   	assign usr_input_out = usr_inputs;
   	assign currency_type_out = currency_type;
