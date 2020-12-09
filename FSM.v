@@ -22,14 +22,14 @@
 
 module FSM(
     input clk,
-    input inc_state, //debug button to progress state
-    input usr_input, //Input from user (probably going to change as the input format is still up in the air)
+    //input inc_state, //debug button to progress state
+    input [1:0] usr_input, //Input from user (probably going to change as the input format is still up in the air)
                      //Maybe Instead of forwarding user input to this module there is another module in the middle
                      //that verifies account numbers and pin numbers
-    input status_code, //Status from middle module for use in progressing states that require more than a simple input 
+    input [3:0] status_code, //Status from middle module for use in progressing states that require more than a simple input 
     output [15:0] current_state, //Current state code
-    output display_enable, //Display output parameter that will have to get configured
-    output input_style_out,
+    //output display_enable, //Display output parameter that will have to get configured
+    output [3:0] input_style_out,
     output [15:0] state_led
     
     // I think we can base the input style parameter and the display enable parameter based off the current state value
@@ -39,7 +39,7 @@ module FSM(
     // Temporary registers for various 
     
     reg display_out;
-    reg input_style;
+    reg [3:0] input_style;
     
     
     // Parameter for status codes for state transitions (status_code)
@@ -79,7 +79,7 @@ module FSM(
         WITHDRAW_OPTION = 2'b10,
         TRANSFER_OPTION = 2'b11;
     
-    reg [10:0] state;
+    reg [15:0] state;
     parameter [15:0] // I made this encoding scheme so i could light up debug LEDs but there are too many states lol
                      // These will probably change but wont affect any other modules
         IDLE = 16'b0000000000000001,
@@ -101,11 +101,12 @@ module FSM(
     initial state = IDLE;
     
     // Isolate rising edge of debug button for state progression
-    
+    /*
     wire inc_state_edge;
     reg inc_state_sync_f;
     reg inc_state_f;
     reg inc_state_sync;
+    
     
     always @(posedge clk) begin
         inc_state_f <= inc_state;
@@ -117,7 +118,7 @@ module FSM(
     end
     
     assign inc_state_edge = inc_state_sync & ~inc_state_sync_f;
-    
+    */
     always @(posedge clk) begin // Use up button to increase state
         
         case(state)
@@ -357,6 +358,8 @@ module FSM(
         endcase
         end
         
-        assign state_led = current_state;
+        assign current_state = state;
+        assign state_led = state;
+        assign input_style_out = input_style;
     
 endmodule

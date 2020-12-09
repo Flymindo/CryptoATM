@@ -28,18 +28,23 @@ module user_input(
     input clk,
     input  [7:0] ascii_code,
     input  [3:0] input_style_out,
-    input [15:0] cstate,
+    input [15:0] current_state,
+    output ready,
     output reg [3:0] status_code_out,
     output reg [15:0] pswd,
     output reg [15:0] acct,
     output reg [1:0] usr_input_out,
-    output reg [2:0] currency_type_out
+    output reg [2:0] currency_type_out,
+    output reg [2:0] currency_type_2_out,
+    output reg [15:0] destinationAcc
     );
     reg[3:0] a;
     reg[3:0] a1; // asciitobinary conversion temporary reg
     reg[7:0] a2;
     reg [11:0] a3;
     reg [15:0] a4;
+    
+    reg ready_reg;
 
     parameter [2:0]
         USD = 3'b000,
@@ -71,8 +76,32 @@ module user_input(
         CONVERT = 2'b01,
         WITHDRAW_OPTION = 2'b10,
         TRANSFER_OPTION = 2'b11;
+        
+    parameter [15:0] // I made this encoding scheme so i could light up debug LEDs but there are too many states lol
+                     // These will probably change but wont affect any other modules
+        IDLE = 16'b0000000000000001,
+        ACC_NUM = 16'b0000000000000010,
+        PIN_INPUT = 16'b0000000000000100,
+        MENU = 16'b0000000000001000,
+        SHOW_BALANCES = 16'b0000000000010000,
+        CONVERT_CURRENCY = 16'b0000000000100000,
+        SELECT_CURRENCY_CONVERT_1 = 16'b0000000001000000,
+        SELECT_CURRENCY_CONVERT_2 = 16'b0000000010000000,
+        WITHDRAW = 16'b0000000100000000,
+        SELECT_AMOUNT_WITHDRAW = 16'b0000001000000000,
+        TRANSFER = 16'b0000010000000000,
+        SELECT_CURRENCY_TRANSFER = 16'b0000100000000000,
+        SELECT_AMOUNT_TRANSFER = 16'b0001000000000000,
+        ERROR = 16'b0010000000000000,
+        SUCCESS = 16'b0100000000000000;    
     
     reg [2:0] count =0;
+    
+    `define CLOCK_FREQ 100000000 // 100 MHz clk
+    `define TIME_DELAY 3 // seconds
+    reg [31:0] timer = 0;
+    
+    assign do_something = (timer==`CLOCK_FREQ*`TIME_DELAY); //3 second pause
     
     always @(posedge clk) begin
     
@@ -81,88 +110,89 @@ module user_input(
             status_code_out = EXIT;
             end
     endcase
-    
-    'define CLOCK_FREQ 100000000 // 100 MHz clk
-    'define TIME_DELAY 3 // seconds
-    reg [31:0] timer=0;
 
-    assign do_something = (timer==`CLOCK_FREQ*`TIME_DELAY); //3 second pause
+    
     
     case(input_style_out)
         ACC_NUMBER: begin
+        
         if (ascii_code !== 8'h2A) begin
             //Concatenation code for ACC_NUMBER  
             if(count == 3'b000 && status_code_out !== INPUT_COMPLETE) begin
                 //a <= 4'b0000;
                 acct <= 16'b000000000000000;
                 count <= count+1'b1;
-                asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out); 
+                //asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out); 
                 a1 <= a[3:0]; // 0 is the pin's LSB
             end
             else if(count == 3'b001) begin
                 //a <= 8'b00000000;
                 count <= count+1'b1;
-                asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out);
+                //asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out);
                 a2 <= {a[3:0],a1};
             end
             else if(count == 3'b010) begin
                 //a3 <= 12'b000000000000;
                 count <= count+1'b1;
-                asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out);
+                //asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out);
                 a3 <= {a[3:0],a2};
             end
             else if(count == 3'b011) begin
                 //a4 <= 16'b0000000000000000;
                 count <= count+1'b1;
-                asciitobinary(ascii_code[7:0],a4,clk, count, current_state, status_code_out);
+                //asciitobinary(ascii_code[7:0],a4,clk, count, current_state, status_code_out);
                 a4 <= {a[3:0],a3};
             end
             else if(count >= 3'b100) begin    
                 acct <= 16'b000000000000000;             
-                always @(posedge clk) begin
+                //always @(posedge clk) begin
                     // ready signal using enter key
                     if(ascii_code == 8'h0D)         // Enter button pressed
                         begin
                             status_code_out = INPUT_COMPLETE;
-                            acct <= a4;
+                            ready_reg = 1'b1;
+                            if (current_state == TRANSFER) begin
+                                destinationAcc <= a4;
+                            end else 
+                                acct <= a4;
                         end
                     timer <= timer + 1'b1; // waits for 3 seconds       
-                end
+                //end
                 count <= 3'b000;
             end  
         end
         end
         
         PIN_NUMBER: begin
-        if (ascii_code !== 8'h2A) begin // if code is non-default
+        if (ascii_code != 8'h2A) begin // if code is non-default
             if(count == 3'b000 && status_code_out !== INPUT_COMPLETE) begin // digit1
                 //a1 <= 4'b0000;
                 pswd <= 16'b000000000000000;
                 count <= count+1'b1;
-                asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out);
+                //asciitobinary(ascii_code[7:0],a,clk, count, current_state, status_code_out);
                 a1 <= a[3:0]; // fill the LSB of output   
             end
             else if(count == 3'b001) begin
                 //a2 <= 8'b00000000;
                 count <= count + 1'b1;
-                asciitobinary(ascii_code[7:0],a,clk,count, current_state, status_code_out);
+                //asciitobinary(ascii_code[7:0],a,clk,count, current_state, status_code_out);
                 a2 <= {a[3:0], a1};
             end
             else if(count == 3'b010) begin
                 //a3 <= 12'b000000000000;
                 count <= count + 1'b1;
-                asciitobinary(ascii_code[7:0],a,clk,count, current_state, status_code_out);
+                //asciitobinary(ascii_code[7:0],a,clk,count, current_state, status_code_out);
                 a3 <= {a[3:0], a2};
             end
             else if(count == 3'b011) begin
                 //a3 <= 12'b000000000000;
                 count <= count + 1'b1;
-                asciitobinary(ascii_code[7:0],a,clk,count, current_state, status_code_out);
+                //asciitobinary(ascii_code[7:0],a,clk,count, current_state, status_code_out);
                 a4 <= {a[3:0], a3};
             end
             else if(count >= 3'b100) begin
                 pswd <= 16'b0000000000000000;
-                always @(posedge clk) begin
+                //always @(posedge clk) begin
                     // ready signal using enter key
                     if(ascii_code == 8'h0D)         // Enter button pressed
                         begin
@@ -170,11 +200,13 @@ module user_input(
                             pswd <= a4;
                         end
                     timer <= timer + 1'b1; // waits for 3 seconds       
-                end
+                //end
                 count <= 3'b000;
             end
         end
         end
+        
+        
         
         MENU_SELECTION: begin
             case(ascii_code)
@@ -191,53 +223,72 @@ module user_input(
                     usr_input_out = TRANSFER_OPTION;
                     end
             endcase
-            always @(posedge clk) begin
+            //always @(posedge clk) begin
                     timer <= timer + 1'b1; // waits for 3 seconds       
                     // ready signal using enter key
                     if(ascii_code == 8'h0D)         // Enter button pressed
                         begin
                             status_code_out = INPUT_COMPLETE;
+                            ready_reg = 1'b1;
                         end
-                end
+            //end
         end 
   
         SINGLE_KEY: begin                         
-                always @(posedge clk) begin
+                //always @(posedge clk) begin
                     timer <= timer + 1'b1; // waits for 3 seconds       
                     // ready signal using enter key
                     if(ascii_code == 8'h0D)         // Enter button pressed
                         begin
                             status_code_out = INPUT_COMPLETE;
+                            ready_reg = 1'b1;
                         end
-                end            
+                //end            
         end
                 
         CURRENCY_TYPE: begin            ///1 to 5 cases         ///  currency_type_out = ascii hex   ///ready signal
             case(ascii_code)
                 8'h31: begin                            // 1 - USD
-                    currency_type_out = USD;
+                    if (current_state == SELECT_CURRENCY_CONVERT_2)
+                        currency_type_2_out = USD;
+                    else
+                        currency_type_out = USD;
                     end
+                    
                 8'h32: begin                            // 2 - BTC
-                    currency_type_out = BTC;
+                    if (current_state == SELECT_CURRENCY_CONVERT_2)
+                        currency_type_2_out = BTC;
+                    else
+                        currency_type_out = BTC;
                     end
                 8'h33: begin                           // 3 - ETH
-                    currency_type_out = ETH;
+                    if (current_state == SELECT_CURRENCY_CONVERT_2)
+                        currency_type_2_out = ETH;
+                    else
+                        currency_type_out = ETH;
                     end
                 8'h34: begin                           // 4 - XRP
-                    currency_type_out = XRP;
+                    if (current_state == SELECT_CURRENCY_CONVERT_2)
+                        currency_type_2_out = XRP;
+                    else
+                        currency_type_out = XRP;
                     end
                 8'h35: begin                           // 5 - LTC
-                    currency_type_out = LTC;
+                    if (current_state == SELECT_CURRENCY_CONVERT_2)
+                        currency_type_2_out = LTC;
+                    else
+                        currency_type_out = LTC;
                     end
             endcase
-            always @(posedge clk) begin
+            //always @(posedge clk) begin
                     timer <= timer + 1'b1; // waits for 3 seconds       
                     // ready signal using enter key
                     if(ascii_code == 8'h0D)         // Enter button pressed
                         begin
                             status_code_out = INPUT_COMPLETE;
+                            ready_reg = 1'b1;
                         end
-                end
+                //end
         end
             
             
@@ -245,22 +296,21 @@ module user_input(
         
               //// until max out 8 digits or they hit enter /////////////////////////////////
               
-            always @(posedge clk) begin
+            //always @(posedge clk) begin
                     timer <= timer + 1'b1; // waits for 3 seconds       
                     // ready signal using enter key
                     if(ascii_code == 8'h0D)         // Enter button pressed
                         begin
                             status_code_out = INPUT_COMPLETE;
+                            ready_reg = 1'b1;
                         end
-                end
+                //end
         end
-             
-             
-             
 
     endcase
     end
     
+    assign ready = ready_reg;
     
 endmodule
 
