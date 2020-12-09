@@ -22,12 +22,12 @@
 
 module display(
     input clk, BTNU,
-    input [15:0] state,
-    input [15:0] balance_dollars_out,
-    input [15:0] balance_btc,
-    input [15:0] balance_eth,
-    input [15:0] balance_xrp,
-    input [15:0] balance_ltc,
+    input [31:0] state,
+    input [31:0] balance_dollars_out,
+    input [31:0] balance_btc,
+    input [31:0] balance_eth,
+    input [31:0] balance_xrp,
+    input [31:0] balance_ltc,
     output  reg[7:0] AN,
     output  reg[6:0] led
     );

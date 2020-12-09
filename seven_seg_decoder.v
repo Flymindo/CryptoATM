@@ -22,7 +22,7 @@
 
 module seven_seg_decoder(
     input clk,
-    input [15:0] balance,
+    input [31:0] balance,
     output reg [7:0] AN,
     output reg [6:0] led
     );
