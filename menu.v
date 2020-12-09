@@ -23,7 +23,6 @@
 module menu(
     input clk,
     input BTNU,
-    input [3:0] state,
     output reg [7:0] AN,
     output reg [6:0] led
     );
