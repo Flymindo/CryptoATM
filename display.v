@@ -23,21 +23,22 @@
 module display(
     input clk, BTNU,
     input [15:0] state,
-//    input [15:0] balance_dollars_out,
-//    input [15:0] balance_btc,
-//    input [15:0] balance_eth,
-//    input [15:0] balance_xrp,
-//    input [15:0] balance_ltc,
+    input [15:0] balance_dollars_out,
+    input [15:0] balance_btc,
+    input [15:0] balance_eth,
+    input [15:0] balance_xrp,
+    input [15:0] balance_ltc,
     output  reg[7:0] AN,
     output  reg[6:0] led
     );
     
-    wire [7:0] AN_menu, AN_const, AN_mov;
-    wire [6:0] led_menu, led_const, led_mov;
+    wire [7:0] AN_menu, AN_const, AN_mov,AN_bal;
+    wire [6:0] led_menu, led_const, led_mov, led_bal;
     
     const_instruction inst_const(clk, state, AN_const,led_const);
     menu menu_selection(clk,BTNU, AN_menu, led_menu);
     moving_ins mi(clk, state, AN_mov, led_mov);
+    display_balance db1(clk,BTNU,balance_dollars_out,balance_btc,balance_eth,balance_xrp,balance_ltc, AN_bal,led_bal);
     
 
     parameter [15:0] // I made this encoding scheme so i could light up debug LEDs but there are too many states lol
@@ -84,7 +85,8 @@ module display(
             end
             SHOW_BALANCES: //SHOW_BALANCES
             begin
-                
+                AN = AN_bal;
+                led = led_bal;
             end
             CONVERT_CURRENCY: //CONVERT_CURRENCY
             begin

@@ -59,10 +59,10 @@ module menu(
     begin
         if(up)
         begin
-            if (button_op == 2'b00)
-                button_op = 2'b11;
+            if (button_op == 2'b11)
+                button_op <= 2'b00;
             else
-                button_op <= button_op - 1'b1;
+                button_op <= button_op + 1'b1;
         end
     end
     
@@ -71,25 +71,25 @@ module menu(
     always@(*)
     begin
         case(button_op)
-        4'b00:
+        2'b00:
             begin
                 AN = AN1;
                 {rst1,rst2,rst3,rst4} = 4'b0111;
                 led = led1;
             end 
-        4'b01:
+        2'b01:
             begin
                 AN = AN2;
                 {rst1,rst2,rst3,rst4} = 4'b1011;
                 led = led2;
             end
-        4'b10:
+        2'b10:
             begin
                 AN = AN3;
                 {rst1,rst2,rst3,rst4} = 4'b1101;
                 led = led3;
             end
-        4'b11:
+        2'b11:
             begin
                 AN = AN4;
                 {rst1,rst2,rst3,rst4} = 4'b1110;
