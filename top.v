@@ -30,7 +30,7 @@ module top(
     output [6:0]SEG,
     output [7:0]AN,
     output DP,
-    output UART_TXD,
+    output UART_TXD
     );
     
 reg CLK50MHZ=0; 
@@ -86,7 +86,6 @@ wire [3:0]status_code_out;
         ERROR = 5'b01110,
         SUCCESS = 5'b01111;
         
-    initial state = IDLE;
 
 always @(posedge(CLK100MHZ))begin
     CLK50MHZ<=~CLK50MHZ;
