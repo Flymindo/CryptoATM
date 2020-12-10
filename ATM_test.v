@@ -25,20 +25,18 @@ module ATM_test(
     );
     
     reg clk;
-    reg [11:0] accNumber;
+    reg [3:0] accNumber;
     reg [3:0] pin;
     reg [15:0] current_state;
     reg [1:0] menuOption;
     reg [2:0] currency_type_in;
     reg [2:0] currency_type_2_in;
-    reg [10:0] amount;
+    reg [31:0] amount;
     reg ready;
-    reg [11:0] destinationAcc;
+    reg [3:0] destinationAcc;
     wire [15:0] balance_dollars_out;
     wire [15:0] balance_btc_out;
     wire [15:0] balance_eth_out;
-    wire [15:0] balance_xrp_out;
-    wire [15:0] balance_ltc_out;
     wire [3:0] status_code;
     
     parameter [15:0] // I made this encoding scheme so i could light up debug LEDs but there are too many states lol
@@ -68,12 +66,12 @@ module ATM_test(
     
     ATM atm_test(.clk(clk), .accNumber(accNumber), .pin(pin), .current_state(current_state), .menuOption(menuOption), .currency_type_in(currency_type_in),
     .currency_type_2_in(currency_type_2_in), .amount(amount), .ready(ready), .destinationAcc(destinationAcc), .balance_dollars_out(balance_dollars_out), .balance_btc_out(balance_btc_out), 
-    .balance_eth_out(balance_eth_out), .balance_xrp_out(balance_xrp_out), .balance_ltc_out(balance_ltc_out), .status_code(status_code));
+    .balance_eth_out(balance_eth_out), .status_code(status_code));
     
     initial begin
     
     clk = 0;
-    accNumber = 12'd2749;
+    accNumber = 4'b0000;
     pin = 4'b0000;
     current_state = ACC_NUM;
     ready = 0;
@@ -86,14 +84,13 @@ module ATM_test(
     
     
     #50 current_state = SELECT_CURRENCY_CONVERT_1;
-    #50 amount = 50;
+    #50 amount = 1;
     #20 ready = 1;
     #20 ready = 0;
     
     #50 current_state = SELECT_CURRENCY_CONVERT_2;
-    #50 currency_type_in = ETH;
+    #50 currency_type_in = BTC;
     #50 currency_type_2_in = USD;
-    #50 amount = 1;
     #20 ready = 1;
     #20 ready = 0;
     
@@ -104,7 +101,7 @@ module ATM_test(
     #20 ready = 0;
     
     #50 current_state = TRANSFER;
-    #50 destinationAcc = 12'd2175;
+    #50 destinationAcc = 4'b0001;
     #20 ready = 1;
     #20 ready = 0;
     
@@ -116,7 +113,7 @@ module ATM_test(
     
     
     #50 current_state = IDLE;
-    #50 accNumber = 12'd2175;
+    #50 accNumber = 4'b0001;
     #50 pin = 4'b0001;
     
     #50 current_state = ACC_NUM;

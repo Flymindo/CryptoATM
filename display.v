@@ -22,7 +22,7 @@
 
 module display(
     input clk, BTNU,
-    input [31:0] state,
+    input [15:0] state,
     input [31:0] balance_dollars_out,
     input [31:0] balance_btc,
     input [31:0] balance_eth,

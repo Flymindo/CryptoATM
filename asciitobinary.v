@@ -84,9 +84,11 @@ always @ (posedge clk)begin
 				out <= a;
 				//$display ($realtime, "ns %d", out);
  			end
+ 			/*
 			else if(status_code_in !== INPUT_COMPLETE)
 				state = IDLE;
 			end
+			*/
 		end
 		PIN_INPUT: begin
 			fsm =0; 
@@ -95,9 +97,11 @@ always @ (posedge clk)begin
 				out <= a;
 				//$display ($realtime, "ns %d", out);
  			end
+ 			/*
 			else if (status_code_in !== INPUT_COMPLETE) begin
 				state = PIN_INPUT;
 			end
+			*/
 		end/*
 		MENU: begin
 			fsm =1;
